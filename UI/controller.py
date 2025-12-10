@@ -47,5 +47,8 @@ class Controller:
         self._view.page.update()
 
     """Implementare la parte di ricerca del cammino minimo"""
-    # TODO
+    def handle_camminominimo(self,e):
+        self._model.calcolo_percorso_minimo()
+
+
 
