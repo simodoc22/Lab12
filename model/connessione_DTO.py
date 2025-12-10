@@ -7,3 +7,5 @@ class Connessione():
         self.difficolta = difficolta
         self.durata = durata
         self.anno = anno
+    def __hash__(self):
+        return hash(self.id)

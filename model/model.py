@@ -59,31 +59,69 @@ class Model:
             else:
                 pass
         return minori,maggiori
+
+
     """Implementare la parte di ricerca del cammino minimo"""
 
+    def ricorsione(self, lista, lista_parziale, node, peso, soglia):
 
-    def ricorsione(self,lista,indice,lista_parziale,node,ultimo_vicino,peso):
-        if len(lista_parziale)>=3:
-            lista.append(lista_parziale)
-
-        if len(lista_parziale)==0:
+        if len(lista_parziale) == 0:
             lista_parziale.append(node)
-        for vicini in self.G.neighbors(node):
-            if len(lista_parziale)==1:
-                lista_parziale.append(vicini)
-                peso += self.G[node][vicini]['weight']
-            else:
-                lista_parziale.append(vicini)
-                peso += self.G[ultimo_vicino][vicini]['weight']
 
-            self.ricorsione(lista,indice,lista_parziale,vicini,peso)
+        if len(lista_parziale) >= 3:
+            lista.append((lista_parziale.copy(), peso))
 
+        for vicino in self.G.neighbors(node):
 
+            if vicino in lista_parziale:
+                continue
 
+            peso1 = self.G[node][vicino]['weight']
 
+            if peso1 < soglia:
+                continue
 
+            lista_parziale.append(vicino)
+            nuovo_peso = peso + peso1
 
+            self.ricorsione(lista, lista_parziale, vicino, nuovo_peso, soglia)
 
-    def calcolo_percorso_minimo(self):
+            lista_parziale.pop()
+
+    def calcolo_percorso_minimo(self, soglia):
+
+        lista_minimi = []  # conterrà TUTTI i minimi (anche multipli)
+
         for node in self.G.nodes():
-            self.ricorsione(self,node)
+
+            lista = []   # reset per ogni nodo
+            self.ricorsione(lista, [], node, 0, soglia)
+
+            if not lista:
+                continue
+
+            # ordina lista per peso
+            lista.sort(key=lambda x: x[1])
+
+            # trova il peso minimo
+            peso_min = lista[0][1]
+
+            # aggiungi TUTTI i percorsi con questo peso
+            for percorso, peso in lista:
+                if peso == peso_min:
+                    lista_minimi.append((percorso, peso))
+                else:
+                    break  # la lista è ordinata, tutto dopo è > minimo
+
+        # opzionale: ordina anche i minimi
+        lista_minimi.sort(key=lambda x: x[1])
+
+        return lista_minimi
+
+
+
+
+
+
+
+

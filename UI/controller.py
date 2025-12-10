@@ -48,7 +48,15 @@ class Controller:
 
     """Implementare la parte di ricerca del cammino minimo"""
     def handle_camminominimo(self,e):
-        self._model.calcolo_percorso_minimo()
 
+        self._view.lista_visualizzazione_3.controls.clear()
+        lista_minimi = self._model.calcolo_percorso_minimo(float(self._view.txt_soglia.value))
+        minimo = lista_minimi[0][1]
+        percorso = lista_minimi[0][0]
+        self._view.lista_visualizzazione_3.controls.append(ft.Text("cammino/i minimo/i"))
+        for i in lista_minimi:
+            if i[1] == minimo:
+                self._view.lista_visualizzazione_3.controls.append(ft.Text(f"{i[0][0]}  -->  {i[0][len(i[0])-1]} il percorso ha un peso di {i[1]}"))
+                self._view.page.update()
 
 
