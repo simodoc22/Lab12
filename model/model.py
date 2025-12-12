@@ -60,43 +60,50 @@ class Model:
                 pass
         return minori,maggiori
 
-
-    """Implementare la parte di ricerca del cammino minimo"""
-
-    def ricorsione(self, lista, lista_parziale, node, peso, soglia):
+    def ricorsione(self, lista, lista_parziale, node, peso, soglia,minimo_valore):
 
         if len(lista_parziale) == 0:
-            lista_parziale.append(node)
+            lista_parziale.append(node)   ##appendo alla lista il primo nodo che e il punto di partenza di ogni combinazione
 
-        if len(lista_parziale) >= 3:
-            lista.append((lista_parziale.copy(), peso))
+        if len(lista_parziale) > 2:
+            lista.append((lista_parziale.copy(), peso))  ##verifico la condizione che siano presenti almeno 3 nodi
 
-        for vicino in self.G.neighbors(node):
+            if peso<= minimo_valore[0]:  ##inoltre aggiorno il peso minimo in modo tale da filtrare in modo efficiente
+                minimo_valore[0] = peso
+
+
+        for vicino in self.G.neighbors(node):  ##per ogni vicino del nodo di partenza applico ricorsione
 
             if vicino in lista_parziale:
                 continue
 
             peso1 = self.G[node][vicino]['weight']
 
-            if peso1 < soglia:
+            if peso1 <= soglia:   ##se non rispetta la condizione di soglia termino il ramo(efficienza)
                 continue
 
-            lista_parziale.append(vicino)
-            nuovo_peso = peso + peso1
+            nuovo_peso = peso + peso1 ##in caso contrario aggiorno il nuovo peso
 
-            self.ricorsione(lista, lista_parziale, vicino, nuovo_peso, soglia)
+            if nuovo_peso >= minimo_valore[0]:  ##controllo subito che sia minore del peso minimo gia trovato in caso contrario termino il ramo
+                continue
 
-            lista_parziale.pop()
+            lista_parziale.append(vicino) ##se tutti i controlli sono soddisfatti appendo
+            self.ricorsione(lista, lista_parziale, vicino, nuovo_peso, soglia, minimo_valore)
+            lista_parziale.pop() ##elimino ultimo elemento per continuare ricorsione
+
+
+
+
+
 
     def calcolo_percorso_minimo(self, soglia):
 
         lista_minimi = []  # conterrà TUTTI i minimi (anche multipli)
 
         for node in self.G.nodes():
-
-            lista = []   # reset per ogni nodo
-            self.ricorsione(lista, [], node, 0, soglia)
-
+            lista = []
+            minimo_valore = [float("inf")]          # reset per ogni nodo
+            self.ricorsione(lista, [], node, 0, soglia,minimo_valore)
             if not lista:
                 continue
 
@@ -104,7 +111,7 @@ class Model:
             lista.sort(key=lambda x: x[1])
 
             # trova il peso minimo
-            peso_min = lista[0][1]
+            peso_min = minimo_valore[0]
 
             # aggiungi TUTTI i percorsi con questo peso
             for percorso, peso in lista:
@@ -117,6 +124,44 @@ class Model:
         lista_minimi.sort(key=lambda x: x[1])
 
         return lista_minimi
+
+
+"""Implementare la parte di ricerca del cammino minimo"""
+""""""""""""""" sfrutto metodi networkx per risolvere il problema
+    def calcolo_percorso_minimo2(self, soglia):
+        G2 = nx.Graph()
+        for node in self.G.nodes():
+            G2.add_node(node)
+        for i in self.lista_connessioni:
+            if float(i.distanza) * float(i.difficolta) > soglia:
+                G2.add_edge(self.dizionario_rifugi[i.id1], self.dizionario_rifugi[i.id2],
+                                weight=float(i.distanza) * float(i.difficolta))
+        miglior_cammino = None
+        miglior_peso = float("inf")
+        for node in G2.nodes():
+            for node2 in G2.nodes():
+                if node == node2:
+                    continue
+                try:
+                    cammino = nx.dijkstra_path(G2, node, node2, weight="weight")
+
+                    if len(cammino) < 3:
+                        continue      ##se i nodi sono solo due termino il ramo
+
+                    peso = nx.path_weight(G2, cammino, weight="weight")
+
+                    if peso < miglior_peso:
+                        miglior_peso = peso
+                        miglior_cammino = cammino
+
+                except nx.NetworkXNoPath:
+                    pass
+        if miglior_cammino is None:
+            return []
+        return miglior_cammino,miglior_peso
+"""""""""""""""""
+
+
 
 
 
